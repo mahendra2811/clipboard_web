@@ -38,8 +38,12 @@ const $ = sel => document.querySelector(sel);
 const $$ = sel => Array.from(document.querySelectorAll(sel));
 
 /* ===================== persistence ===================== */
-function save(){ try{ localStorage.setItem(KEY, JSON.stringify(state)); }
-  catch(e){ toast("Couldn't save — storage may be full", true); } }
+function save(){
+  // Never persist a broken/empty shape over good data.
+  if(!state || !Array.isArray(state.categories) || !Array.isArray(state.templates)) return;
+  try{ localStorage.setItem(KEY, JSON.stringify(state)); }
+  catch(e){ toast("Couldn't save — storage may be full", true); }
+}
 function uid(){ return Date.now().toString(36)+Math.random().toString(36).slice(2,6); }
 
 async function boot(){
@@ -114,9 +118,11 @@ function render(){
   const list = filtered();
   const main = $("#main");
   if(list.length===0){ main.innerHTML = emptyHtml(); wireEmpty(); return; }
-  if(view==="cards")      main.innerHTML = `<div class="grid">${list.map(cardHtml).join("")}</div>`;
-  else if(view==="list")  main.innerHTML = `<div class="list">${list.map(listHtml).join("")}</div>`;
-  else                    main.innerHTML = `<div class="acc-list">${list.map(accHtml).join("")}</div>`;
+  if(view==="cards")        main.innerHTML = `<div class="grid">${list.map(cardHtml).join("")}</div>`;
+  else if(view==="small")   main.innerHTML = `<div class="grid small">${list.map(smallCardHtml).join("")}</div>`;
+  else if(view==="sections")main.innerHTML = sectionsHtml(list);
+  else if(view==="list")    main.innerHTML = `<div class="list">${list.map(listHtml).join("")}</div>`;
+  else                      main.innerHTML = `<div class="acc-list">${list.map(accHtml).join("")}</div>`;
   wireRows();
   wireDrag();
 }
@@ -190,6 +196,45 @@ function listHtml(t){
       <button class="iconbtn" title="Edit" data-act="edit" data-id="${t.id}">⚙</button>
     </div>
   </div>`;
+}
+
+/* small card — compact grid tile */
+function smallCardHtml(t){
+  const v=vars(t.body), hv=v.length>0;
+  return `<div class="card small" data-row="${t.id}">
+    <span class="drag" draggable="true" title="Drag to reorder">⠿</span>
+    <span class="tag">${esc(catName(t.cat))}</span>
+    <h3>${esc(t.title)}</h3>
+    ${t.desc?`<div class="desc clamp1">${esc(t.desc)}</div>`:""}
+    ${hv?`<div class="vars">${v.slice(0,4).map(x=>`<span class="var-chip">${esc(x)}</span>`).join("")}</div>`:""}
+    <div class="row-actions">
+      <button class="btn primary" data-act="${hv?"fill":"copy"}" data-id="${t.id}">${hv?"Customize":"Copy"}</button>
+      <button class="btn mini" title="Edit" data-act="edit" data-id="${t.id}">✎</button>
+    </div>
+  </div>`;
+}
+
+/* sections — small cards grouped under category headers (respects category order) */
+function sectionsHtml(list){
+  const byCat={}; list.forEach(t=>{ (byCat[t.cat]=byCat[t.cat]||[]).push(t); });
+  let html="";
+  state.categories.forEach(c=>{
+    const items=byCat[c.id];
+    if(!items || !items.length) return;
+    html += `<section class="sec">
+      <div class="sec-head"><h2>${esc(c.name)}</h2><span class="sec-count">${items.length}</span></div>
+      <div class="grid small">${items.map(smallCardHtml).join("")}</div>
+    </section>`;
+  });
+  // any templates whose category was deleted
+  const orphan = list.filter(t=>!state.categories.some(c=>c.id===t.cat));
+  if(orphan.length){
+    html += `<section class="sec">
+      <div class="sec-head"><h2>Uncategorized</h2><span class="sec-count">${orphan.length}</span></div>
+      <div class="grid small">${orphan.map(smallCardHtml).join("")}</div>
+    </section>`;
+  }
+  return html;
 }
 
 /* one delegated handler for every row action */
@@ -429,6 +474,16 @@ function toast(msg,bad){
 }
 
 /* ===================== wiring ===================== */
+/* collapsible view/options panel */
+function toggleToolbar(force){
+  const tb=$("#toolbar");
+  const open = force!==undefined ? force : tb.classList.contains("collapsed");
+  tb.classList.toggle("collapsed", !open);
+  $("#viewToggle").classList.toggle("active", open);
+  $("#viewToggle").setAttribute("aria-expanded", String(open));
+}
+$("#viewToggle").onclick=()=>toggleToolbar();
+
 $("#viewSeg").addEventListener("click",e=>{ const b=e.target.closest("button"); if(b) setView(b.dataset.view); });
 $("#newTplBtn").onclick=()=>openEditor();
 $("#saveTplBtn").onclick=saveTemplate;
@@ -440,6 +495,12 @@ $("#importBtn").onclick=()=>$("#importFile").click();
 $("#importFile").onchange=importData;
 $("#addCatBtn").onclick=addCategory;
 $("#newCatInput").addEventListener("keydown",e=>{ if(e.key==="Enter") addCategory(); });
+
+/* let the category bar scroll horizontally with a normal mouse wheel */
+const chipsBar=$("#chips");
+chipsBar.addEventListener("wheel",e=>{
+  if(Math.abs(e.deltaY) > Math.abs(e.deltaX)){ chipsBar.scrollLeft += e.deltaY; e.preventDefault(); }
+},{passive:false});
 
 const search=$("#search");
 search.addEventListener("input",()=>{ $("#searchClear").hidden=!search.value; render(); });
