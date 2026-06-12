@@ -1,4 +1,6 @@
-{
+/* Auto-generated from espanso/textblaze packs by convert_espanso.py.
+   Loaded before app.js so the app can seed under file:// too. */
+window.SEED_DATA = {
   "categories": [
     {
       "id": "c-personal",
@@ -33,7 +35,7 @@
       "name": "LinkedIn Comments"
     },
     {
-      "id": "c-li-ref",  nbn n
+      "id": "c-li-ref",
       "name": "LinkedIn Referrals"
     },
     {
@@ -786,4 +788,4 @@
       "body": "Subject: Quick referral favor - {Company}\n\nHi {Name},\n\nHope you're well at {Company}! Saw {Role} is open - would you be open to referring me internally?\n\nSoftware Developer at Primathon with around 2 years of production experience (intern to full-time since early 2024, IIIT Dharwad 2024 grad).\n\nHighlights:\n- Owned Care41.net end-to-end - healthcare booking (patient UI, admin portal, REST APIs, MongoDB)\n- Built data layer + frontend for 3 D2C storefronts on a multi-merchant Next.js platform (Aqualogica, Wellversed, PlixKids)\n- Pioneered AI-augmented dev workflows on the team (Claude Code, MCP, multi-agent pipelines)\n\nStack: React, Next.js, TypeScript, Node.js, MongoDB, PostgreSQL, Sentry, GA4.\n\nHappy to hop on a quick call if helpful.\n\nThanks,\n\nResume: https://drive.google.com/file/d/1pa0K3xRygy0D3DHOZrC5DUcNdbpYg919/view\n\nBest,\nMahendra Singh Puniya\nPhone number: +91-7568265755\nPortfolio: https://pooniya.com/"
     }
   ]
-}
+};

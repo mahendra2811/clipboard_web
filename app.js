@@ -1,7 +1,7 @@
 "use strict";
 
 /* ===================== storage keys ===================== */
-const KEY = "snippet-launcher-v2";
+const KEY = "snippet-launcher-v3";
 const VIEW_KEY = "snippet-launcher-view";
 
 /* Fallback seed — used when data.json can't be fetched (e.g. opened via file://). */
@@ -45,12 +45,17 @@ function uid(){ return Date.now().toString(36)+Math.random().toString(36).slice(
 async function boot(){
   const raw = localStorage.getItem(KEY);
   if(raw){
-    try{ state = JSON.parse(raw); }catch(e){ state = clone(FALLBACK_DATA); }
+    try{ state = JSON.parse(raw); }catch(e){ state = clone(seed()); }
   }else{
-    try{
-      const r = await fetch("data.json", {cache:"no-store"});
-      state = r.ok ? await r.json() : clone(FALLBACK_DATA);
-    }catch(e){ state = clone(FALLBACK_DATA); }
+    // Prefer the bundled seed (works under file://); fall back to data.json, then inline.
+    if(window.SEED_DATA && Array.isArray(window.SEED_DATA.templates)){
+      state = clone(window.SEED_DATA);
+    }else{
+      try{
+        const r = await fetch("data.json", {cache:"no-store"});
+        state = r.ok ? await r.json() : clone(FALLBACK_DATA);
+      }catch(e){ state = clone(FALLBACK_DATA); }
+    }
     save();
   }
   if(!Array.isArray(state.categories)) state.categories=[];
@@ -59,6 +64,7 @@ async function boot(){
   render();
 }
 function clone(o){ return JSON.parse(JSON.stringify(o)); }
+function seed(){ return (window.SEED_DATA && Array.isArray(window.SEED_DATA.templates)) ? window.SEED_DATA : FALLBACK_DATA; }
 
 /* ===================== helpers ===================== */
 function catName(id){ const c=state.categories.find(c=>c.id===id); return c?c.name:"Uncategorized"; }
@@ -112,6 +118,7 @@ function render(){
   else if(view==="list")  main.innerHTML = `<div class="list">${list.map(listHtml).join("")}</div>`;
   else                    main.innerHTML = `<div class="acc-list">${list.map(accHtml).join("")}</div>`;
   wireRows();
+  wireDrag();
 }
 
 function emptyHtml(){
@@ -126,7 +133,8 @@ function wireEmpty(){ const b=$("#emptyNew"); if(b) b.onclick=()=>openEditor(); 
 /* card */
 function cardHtml(t){
   const v=vars(t.body), hv=v.length>0;
-  return `<div class="card">
+  return `<div class="card" data-row="${t.id}">
+    <span class="drag" draggable="true" title="Drag to reorder">⠿</span>
     <span class="tag">${esc(catName(t.cat))}</span>
     <h3>${esc(t.title)}</h3>
     ${t.desc?`<div class="desc">${esc(t.desc)}</div>`:""}
@@ -143,8 +151,9 @@ function cardHtml(t){
 /* accordion */
 function accHtml(t){
   const v=vars(t.body), hv=v.length>0, open=expanded.has(t.id);
-  return `<div class="acc ${open?"open":""}" data-id="${t.id}">
+  return `<div class="acc ${open?"open":""}" data-id="${t.id}" data-row="${t.id}">
     <div class="acc-head" data-act="toggle" data-id="${t.id}">
+      <span class="drag" draggable="true" title="Drag to reorder">⠿</span>
       <div class="acc-main">
         <span class="acc-cat">${esc(catName(t.cat))}</span>
         <div class="acc-title"><span class="ttl">${esc(t.title)}</span></div>
@@ -170,7 +179,8 @@ function accHtml(t){
 /* list */
 function listHtml(t){
   const hv=hasVars(t.id);
-  return `<div class="li">
+  return `<div class="li" data-row="${t.id}">
+    <span class="drag" draggable="true" title="Drag to reorder">⠿</span>
     <div class="li-main" data-act="${hv?"fill":"copy"}" data-id="${t.id}">
       <div class="li-title">${esc(t.title)}</div>
       <div class="li-sub"><b>${esc(catName(t.cat))}</b> · ${esc(t.desc||t.body)}</div>
@@ -194,6 +204,69 @@ function wireRows(){
       else if(act==="edit"){ openEditor(id); }
     };
   });
+}
+
+/* ===================== drag-to-reorder ===================== */
+let dragId = null;
+function rowOf(el){ return el ? el.closest("[data-row]") : null; }
+
+function wireDrag(){
+  const main = $("#main");
+  main.querySelectorAll(".drag").forEach(h=>{
+    h.addEventListener("dragstart", e=>{
+      const row = rowOf(h);
+      dragId = row ? row.dataset.row : null;
+      e.dataTransfer.effectAllowed = "move";
+      try{ e.dataTransfer.setData("text/plain", dragId||""); }catch(_){}
+      if(row) setTimeout(()=>row.classList.add("dragging"),0);
+    });
+    h.addEventListener("dragend", ()=>{
+      dragId = null;
+      clearDropMarks();
+      main.querySelectorAll(".dragging").forEach(r=>r.classList.remove("dragging"));
+    });
+  });
+
+  main.querySelectorAll("[data-row]").forEach(row=>{
+    row.addEventListener("dragover", e=>{
+      if(!dragId || row.dataset.row===dragId) return;
+      e.preventDefault();
+      e.dataTransfer.dropEffect = "move";
+      const r = row.getBoundingClientRect();
+      const after = e.clientY > r.top + r.height/2;
+      clearDropMarks();
+      row.classList.add(after?"drop-below":"drop-above");
+    });
+    row.addEventListener("dragleave", e=>{
+      // only clear if leaving the row entirely
+      if(!row.contains(e.relatedTarget)) row.classList.remove("drop-above","drop-below");
+    });
+    row.addEventListener("drop", e=>{
+      if(!dragId || row.dataset.row===dragId) return;
+      e.preventDefault();
+      const after = row.classList.contains("drop-below");
+      const targetId = row.dataset.row;
+      clearDropMarks();
+      reorder(dragId, targetId, after);
+    });
+  });
+}
+function clearDropMarks(){
+  $("#main").querySelectorAll(".drop-above,.drop-below")
+    .forEach(r=>r.classList.remove("drop-above","drop-below"));
+}
+/* Move template `dragId` to just before/after `targetId` in the master list. */
+function reorder(id, targetId, after){
+  if(id===targetId) return;
+  const arr = state.templates;
+  const from = arr.findIndex(t=>t.id===id);
+  if(from<0) return;
+  const [moved] = arr.splice(from,1);
+  let to = arr.findIndex(t=>t.id===targetId);
+  if(to<0){ arr.splice(from,0,moved); return; }   // target vanished — undo
+  if(after) to++;
+  arr.splice(to,0,moved);
+  save(); render(); toast("Order updated");
 }
 
 /* ===================== editor (slide-over) ===================== */
