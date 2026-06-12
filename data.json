@@ -1,0 +1,40 @@
+{
+  "categories": [
+    { "id": "c-ref",    "name": "LinkedIn referral" },
+    { "id": "c-email",  "name": "Application email" },
+    { "id": "c-follow", "name": "Follow-up" },
+    { "id": "c-comment","name": "LinkedIn comment" }
+  ],
+  "templates": [
+    {
+      "id": "t1", "cat": "c-ref",
+      "title": "Referral request — short",
+      "desc": "First cold DM asking for a referral",
+      "body": "Hi {name}, hope you're doing well! I noticed {company} is hiring for a {role} and saw you're on the team. I'm a frontend engineer (Next.js, React, TypeScript) with ~2 yrs of production experience. Would you be open to referring me? Happy to share my resume — thanks a lot either way!"
+    },
+    {
+      "id": "t2", "cat": "c-ref",
+      "title": "Referral request — with resume",
+      "desc": "When they replied / you have their contact",
+      "body": "Thanks so much, {name}! Here's a quick summary: frontend SDE with ~2 yrs on Next.js, React, TypeScript and Shopify headless commerce, plus production observability (Sentry). I've attached my resume for the {role} role at {company}. Really appreciate you taking the time."
+    },
+    {
+      "id": "t3", "cat": "c-email",
+      "title": "Cold application email",
+      "desc": "Direct to recruiter / hiring manager",
+      "body": "Subject: Frontend Engineer application — {role}\n\nHi {name},\n\nI'm reaching out about the {role} position at {company}. I'm a frontend engineer with ~2 years of experience shipping production apps with Next.js, React and TypeScript, including headless Shopify storefronts and Sentry-based observability.\n\nMy resume is attached. I'd love the chance to talk about how I can contribute to your team.\n\nBest,\nRaj"
+    },
+    {
+      "id": "t4", "cat": "c-follow",
+      "title": "Follow-up — no reply",
+      "desc": "Gentle nudge ~4–5 days later",
+      "body": "Hi {name}, just floating this back to the top of your inbox in case it got buried. Still very interested in the {role} role at {company} — happy to share anything that would help. Thanks for your time!"
+    },
+    {
+      "id": "t5", "cat": "c-comment",
+      "title": "\"Interested\" comment",
+      "desc": "Reply under a hiring post",
+      "body": "This looks like a great opportunity! I'm a frontend engineer (Next.js / React / TypeScript) actively looking and would love to be considered for the {role} role. Dropping a note here and will DM as well — thanks {name}!"
+    }
+  ]
+}

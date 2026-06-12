@@ -1,0 +1,114 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<title>Snippet Launcher</title>
+<link rel="stylesheet" href="styles.css">
+</head>
+<body>
+
+<header class="topbar">
+  <div class="brand"><span class="dot"></span><span class="brand-name">Snippet Launcher</span></div>
+
+  <div class="search">
+    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4.3-4.3"/></svg>
+    <input id="search" placeholder="Search templates…" autocomplete="off">
+    <button id="searchClear" class="search-clear" title="Clear" hidden>×</button>
+  </div>
+
+  <div class="toolbar">
+    <div class="seg" id="viewSeg" role="tablist" aria-label="View">
+      <button data-view="accordion" title="Accordion — best for narrow windows">Accordion</button>
+      <button data-view="cards" title="Cards">Cards</button>
+      <button data-view="list" title="Compact list">List</button>
+    </div>
+    <button class="btn" id="exportBtn" title="Download a JSON backup of everything">↧<span class="lbl"> Backup</span></button>
+    <button class="btn" id="importBtn" title="Load templates from a backup file">↥<span class="lbl"> Import</span></button>
+    <button class="btn primary" id="newTplBtn">+<span class="lbl"> New</span></button>
+    <input type="file" id="importFile" accept="application/json,.json" hidden>
+  </div>
+</header>
+
+<nav class="chips" id="chips" aria-label="Categories"></nav>
+
+<main id="main"></main>
+
+<!-- ============ Editor (separate slide-over view) ============ -->
+<div class="sheet-backdrop" id="editorBackdrop"></div>
+<section class="editor" id="editor" aria-hidden="true">
+  <div class="editor-head">
+    <h2 id="editorTitle">New template</h2>
+    <button class="closeX" data-close="editor">×</button>
+  </div>
+  <div class="editor-body">
+    <div class="field">
+      <label for="f_cat">Category</label>
+      <select id="f_cat"></select>
+    </div>
+    <div class="field">
+      <label for="f_title">Title</label>
+      <input id="f_title" placeholder="e.g. Referral request — short">
+    </div>
+    <div class="field">
+      <label for="f_desc">Description <span class="hint">— shown on the card</span></label>
+      <input id="f_desc" placeholder="When to use this one">
+    </div>
+    <div class="field">
+      <label for="f_body">Message <span class="hint">— wrap variables in braces: {name}, {company}, {role}</span></label>
+      <textarea id="f_body" placeholder="Hi {name}, I saw the {role} opening at {company} and…"></textarea>
+      <div class="detected" id="detected"></div>
+    </div>
+  </div>
+  <div class="editor-foot">
+    <button class="btn danger" id="deleteTplBtn" hidden>Delete</button>
+    <span class="spacer"></span>
+    <button class="btn" data-close="editor">Cancel</button>
+    <button class="btn primary" id="saveTplBtn">Save</button>
+  </div>
+</section>
+
+<!-- ============ Customize / fill popup ============ -->
+<div class="overlay" id="fillOverlay">
+  <div class="modal">
+    <div class="modal-head">
+      <h2 id="fillTitle">Customize</h2>
+      <button class="closeX" data-close-overlay="fillOverlay">×</button>
+    </div>
+    <div class="modal-body">
+      <div class="var-grid" id="varGrid"></div>
+      <label class="out-label">Preview</label>
+      <div class="out" id="fillPreview"></div>
+    </div>
+    <div class="modal-foot">
+      <button class="btn" data-close-overlay="fillOverlay">Close</button>
+      <button class="btn primary" id="fillCopyBtn">Copy to clipboard</button>
+    </div>
+  </div>
+</div>
+
+<!-- ============ Manage categories popup ============ -->
+<div class="overlay" id="catOverlay">
+  <div class="modal">
+    <div class="modal-head">
+      <h2>Categories</h2>
+      <button class="closeX" data-close-overlay="catOverlay">×</button>
+    </div>
+    <div class="modal-body">
+      <div class="cat-rows" id="catRows"></div>
+      <div class="cat-add">
+        <input id="newCatInput" placeholder="New category name" autocomplete="off">
+        <button class="btn primary" id="addCatBtn">Add</button>
+      </div>
+    </div>
+    <div class="modal-foot">
+      <button class="btn primary" data-close-overlay="catOverlay">Done</button>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast">Copied</div>
+
+<script src="app.js"></script>
+</body>
+</html>
