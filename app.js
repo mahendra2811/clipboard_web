@@ -237,6 +237,9 @@ function sectionsHtml(list){
   return html;
 }
 
+/* primary action for a template: customize if it has variables, else straight copy */
+function primaryAct(id){ if(hasVars(id)) openFill(id); else copyText(getBody(id)); }
+
 /* one delegated handler for every row action */
 function wireRows(){
   $("#main").querySelectorAll("[data-act]").forEach(el=>{
@@ -248,6 +251,15 @@ function wireRows(){
       else if(act==="fill"){ openFill(id); }
       else if(act==="edit"){ openEditor(id); }
     };
+  });
+  // Whole card / list row is clickable — copies (or opens Customize). Buttons,
+  // the drag handle, and selecting text are excluded.
+  $("#main").querySelectorAll(".card, .li").forEach(el=>{
+    el.addEventListener("click", e=>{
+      if(e.target.closest("button") || e.target.closest(".drag")) return;
+      if(!window.getSelection().isCollapsed) return;   // user is selecting text
+      primaryAct(el.dataset.row);
+    });
   });
 }
 
