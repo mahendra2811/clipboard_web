@@ -46,20 +46,15 @@ function save(){
 }
 function uid(){ return Date.now().toString(36)+Math.random().toString(36).slice(2,6); }
 
-async function boot(){
+function boot(){
   const raw = localStorage.getItem(KEY);
   if(raw){
-    try{ state = JSON.parse(raw); }catch(e){ state = clone(seed()); }
+    // Returning visit — data lives in this browser only; the starter file is never touched again.
+    try{ state = JSON.parse(raw); }
+    catch(e){ state = clone(seed()); save(); }
   }else{
-    // Prefer the bundled seed (works under file://); fall back to data.json, then inline.
-    if(window.SEED_DATA && Array.isArray(window.SEED_DATA.templates)){
-      state = clone(window.SEED_DATA);
-    }else{
-      try{
-        const r = await fetch("data.json", {cache:"no-store"});
-        state = r.ok ? await r.json() : clone(FALLBACK_DATA);
-      }catch(e){ state = clone(FALLBACK_DATA); }
-    }
+    // First visit ONLY — copy the bundled starter data (seed.js) into localStorage once.
+    state = clone(seed());
     save();
   }
   if(!Array.isArray(state.categories)) state.categories=[];
