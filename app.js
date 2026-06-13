@@ -486,25 +486,32 @@ function toast(msg,bad){
 }
 
 /* ===================== wiring ===================== */
-/* collapsible view/options panel */
-function toggleToolbar(force){
-  const tb=$("#toolbar");
-  const open = force!==undefined ? force : tb.classList.contains("collapsed");
-  tb.classList.toggle("collapsed", !open);
-  $("#viewToggle").classList.toggle("active", open);
-  $("#viewToggle").setAttribute("aria-expanded", String(open));
+/* settings / "more" dropdown menu */
+function menuOpen(){ return $("#settingsMenu").classList.contains("show"); }
+function openMenu(){
+  const m=$("#settingsMenu"), btn=$("#viewToggle"), r=btn.getBoundingClientRect();
+  m.style.top = (r.bottom + 8) + "px";
+  m.style.right = Math.max(12, window.innerWidth - r.right) + "px";
+  m.classList.add("show"); $("#menuBackdrop").classList.add("show");
+  btn.classList.add("active"); btn.setAttribute("aria-expanded","true");
 }
-$("#viewToggle").onclick=()=>toggleToolbar();
+function closeMenu(){
+  $("#settingsMenu").classList.remove("show"); $("#menuBackdrop").classList.remove("show");
+  $("#viewToggle").classList.remove("active"); $("#viewToggle").setAttribute("aria-expanded","false");
+}
+function toggleMenu(){ menuOpen()?closeMenu():openMenu(); }
+$("#viewToggle").onclick=e=>{ e.stopPropagation(); toggleMenu(); };
+$("#menuBackdrop").onclick=closeMenu;
 
-$("#viewSeg").addEventListener("click",e=>{ const b=e.target.closest("button"); if(b) setView(b.dataset.view); });
-$("#newTplBtn").onclick=()=>openEditor();
+$("#viewSeg").addEventListener("click",e=>{ const b=e.target.closest("button"); if(b){ setView(b.dataset.view); closeMenu(); } });
+$("#newTplBtn").onclick=()=>{ closeMenu(); openEditor(); };
 $("#saveTplBtn").onclick=saveTemplate;
 $("#deleteTplBtn").onclick=deleteTemplate;
 $("#f_body").addEventListener("input",refreshDetected);
 $("#fillCopyBtn").onclick=()=>{ copyText(buildFilled(fillValues(),false)); $("#fillOverlay").classList.remove("show"); };
-$("#exportBtn").onclick=exportData;
+$("#exportBtn").onclick=()=>{ closeMenu(); exportData(); };
 $("#importBtn").onclick=()=>$("#importFile").click();
-$("#importFile").onchange=importData;
+$("#importFile").onchange=e=>{ closeMenu(); importData(e); };
 $("#addCatBtn").onclick=addCategory;
 $("#newCatInput").addEventListener("keydown",e=>{ if(e.key==="Enter") addCategory(); });
 
@@ -524,9 +531,11 @@ $$("[data-close-overlay]").forEach(b=>b.onclick=()=>$("#"+b.dataset.closeOverlay
 $$(".overlay").forEach(o=>o.addEventListener("click",e=>{ if(e.target===o) o.classList.remove("show"); }));
 document.addEventListener("keydown",e=>{
   if(e.key==="Escape"){
+    if(menuOpen()) closeMenu();
     $$(".overlay.show").forEach(o=>o.classList.remove("show"));
     if($("#editor").classList.contains("show")) closeEditor();
   }
 });
+window.addEventListener("resize",()=>{ if(menuOpen()) openMenu(); });
 
 boot();

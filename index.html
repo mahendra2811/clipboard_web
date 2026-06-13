@@ -11,32 +11,37 @@
 
 <div class="appbar">
   <header class="topbar">
-    <div class="brand"><span class="dot"></span><span class="brand-name">Snippet Launcher</span></div>
-
     <div class="search">
       <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4.3-4.3"/></svg>
       <input id="search" placeholder="Search templates…" autocomplete="off">
       <button id="searchClear" class="search-clear" title="Clear" hidden>×</button>
     </div>
 
-    <button class="btn icon" id="viewToggle" title="View & options" aria-expanded="false" aria-controls="toolbar">⚙</button>
-
-    <div class="toolbar collapsed" id="toolbar">
-      <div class="seg" id="viewSeg" role="tablist" aria-label="View">
-        <button data-view="sections" title="Grouped by category">Sections</button>
-        <button data-view="cards" title="Cards">Cards</button>
-        <button data-view="small" title="Compact cards">Small</button>
-        <button data-view="list" title="Compact list">List</button>
-        <button data-view="accordion" title="Accordion — best for narrow windows">Accordion</button>
-      </div>
-      <button class="btn" id="exportBtn" title="Download a JSON backup of everything">↧<span class="lbl"> Backup</span></button>
-      <button class="btn" id="importBtn" title="Load templates from a backup file">↥<span class="lbl"> Import</span></button>
-      <button class="btn primary" id="newTplBtn">+<span class="lbl"> New</span></button>
-      <input type="file" id="importFile" accept="application/json,.json" hidden>
-    </div>
+    <button class="btn icon more" id="viewToggle" title="More" aria-haspopup="true" aria-expanded="false" aria-controls="settingsMenu">⋮</button>
   </header>
 
   <nav class="chips" id="chips" aria-label="Categories"></nav>
+</div>
+
+<!-- ============ Settings / "more" menu ============ -->
+<div class="menu-backdrop" id="menuBackdrop"></div>
+<div class="menu" id="settingsMenu" role="menu" aria-label="Settings">
+  <div class="menu-sec">
+    <div class="menu-label">View</div>
+    <div class="seg" id="viewSeg" role="tablist" aria-label="View">
+      <button data-view="sections" title="Grouped by category">Sections</button>
+      <button data-view="cards" title="Cards">Cards</button>
+      <button data-view="small" title="Compact cards">Small</button>
+      <button data-view="list" title="Compact list">List</button>
+      <button data-view="accordion" title="Accordion">Accordion</button>
+    </div>
+  </div>
+  <div class="menu-sec">
+    <button class="menu-item primary" id="newTplBtn">＋ New template</button>
+    <button class="menu-item" id="importBtn">↥ Import backup</button>
+    <button class="menu-item" id="exportBtn">↧ Download backup</button>
+    <input type="file" id="importFile" accept="application/json,.json" hidden>
+  </div>
 </div>
 
 <main id="main"></main>
